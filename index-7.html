@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kasir Kedai Rasa Kita</title>
+  <style>
+    :root{--primary:#2563eb;--dark:#172554;--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--danger:#dc2626;--green:#15803d}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text)}
+    header{background:linear-gradient(135deg,#1d4ed8,#0f172a);color:#fff;padding:18px 16px}
+    .head{max-width:1100px;margin:auto;display:flex;align-items:center;gap:12px}
+    .logo{font-size:32px;background:#ffffff22;border-radius:14px;padding:10px}
+    h1{font-size:22px;margin:0 0 5px} header p{margin:0;color:#dbeafe;font-size:13px}
+    main{max-width:1100px;margin:18px auto;padding:0 14px 90px}
+    .layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(290px,.9fr);gap:16px}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 3px 12px #0f172a08}
+    .toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+    input,select,button{font:inherit}
+    input,select{border:1px solid #cbd5e1;border-radius:10px;padding:11px;width:100%;background:white;color:var(--text)}
+    .toolbar input{flex:1;min-width:150px}
+    .toolbar select{width:auto;min-width:125px}
+    .products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .product{border:1px solid var(--line);border-radius:13px;padding:12px;display:flex;flex-direction:column;gap:7px;min-width:0}
+    .emoji{font-size:27px;background:#eff6ff;border-radius:10px;padding:9px;text-align:center}
+    .product h3{font-size:14px;margin:0;overflow-wrap:anywhere}
+    .product small{color:var(--muted)}
+    .price{font-weight:700;color:var(--primary);font-size:14px}
+    button{border:0;border-radius:10px;padding:11px 13px;min-height:42px;background:var(--primary);color:#fff;font-weight:700;cursor:pointer}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    .product button{margin-top:auto;width:100%}
+    .secondary{background:#e2e8f0;color:#0f172a}
+    .danger{background:#fee2e2;color:#991b1b}
+    .muted{color:var(--muted);font-size:13px}
+    .cart-row{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px 0;border-bottom:1px solid var(--line)}
+    .cart-row:last-child{border-bottom:0}
+    .qty{display:flex;align-items:center;gap:7px;margin-top:7px}
+    .qty button{min-height:30px;padding:4px 10px}
+    .summary{display:grid;gap:9px;margin-top:14px}
+    .sumline{display:flex;justify-content:space-between;gap:10px}
+    .total{font-size:19px;font-weight:800;border-top:1px solid var(--line);padding-top:12px}
+    .payrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .full{width:100%}
+    .message{padding:10px;border-radius:10px;background:#fef3c7;color:#92400e;font-size:13px;display:none;margin-top:10px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 15px}
+    .tabs button{background:#dbeafe;color:#1e40af}
+    .tabs button.active{background:var(--primary);color:white}
+    .section{display:none}.section.active{display:block}
+    .history-item{border-bottom:1px solid var(--line);padding:12px 0}
+    .history-item:last-child{border-bottom:0}
+    .modal{position:fixed;inset:0;background:#0f172a99;display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+    .modal.show{display:flex}
+    .receipt{background:#fff;color:#111827;border-radius:14px;padding:20px;max-width:420px;width:100%;max-height:90vh;overflow:auto}
+    .receipt h2,.receipt p{text-align:center}
+    .receipt table{width:100%;border-collapse:collapse;font-size:13px}
+    .receipt td{padding:5px 0}
+    .receipt .right{text-align:right}
+    .admin-form{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:15px}
+    .admin-form button{grid-column:1/-1}
+    .admin-list{display:grid;gap:8px}
+    .admin-item{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:9px 0}
+    .admin-item button{padding:7px 9px;min-height:34px}
+    .empty{text-align:center;color:var(--muted);padding:20px}
+    footer{text-align:center;color:var(--muted);font-size:12px;margin-top:20px}
+    @media(max-width:760px){.layout{grid-template-columns:1fr}.products{grid-template-columns:repeat(2,minmax(0,1fr))}.head{align-items:flex-start}.panel{padding:13px}main{margin-top:12px}}
+    @media(max-width:360px){.products{grid-template-columns:1fr 1fr}.product{padding:9px}h1{font-size:19px}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="head">
+    <div class="logo" aria-hidden="true">☕</div>
+    <div><h1>Kedai Rasa Kita</h1><p>Aplikasi mesin kasir sederhana • XI RPL</p></div>
+  </div>
+</header>
+<main>
+  <nav class="tabs" aria-label="Navigasi">
+    <button class="active" data-tab="kasir">Kasir</button>
+    <button data-tab="riwayat">Riwayat</button>
+    <button data-tab="produk">Kelola Produk</button>
+    <button data-tab="laporan">Laporan</button>
+  </nav>
+
+  <section id="kasir" class="section active">
+    <div class="layout">
+      <div class="panel">
+        <h2>Daftar Produk</h2>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="Cari nama produk..." aria-label="Cari produk">
+          <select id="category" aria-label="Filter kategori"><option value="Semua">Semua kategori</option></select>
+        </div>
+        <div id="products" class="products"></div>
+      </div>
+      <aside class="panel">
+        <h2>Keranjang Belanja</h2>
+        <div id="cart"></div>
+        <div class="summary">
+          <div class="sumline"><span>Subtotal</span><strong id="subtotal">Rp0</strong></div>
+          <div class="sumline"><label for="discount">Diskon (Rp)</label><input id="discount" type="number" min="0" value="0" style="width:110px;padding:7px"></div>
+          <div class="sumline"><label for="tax">PPN (opsional %)</label><input id="tax" type="number" min="0" max="100" value="0" style="width:75px;padding:7px"></div>
+          <div class="sumline"><span>PPN</span><strong id="taxAmount">Rp0</strong></div>
+          <div class="sumline total"><span>Total</span><strong id="total">Rp0</strong></div>
+          <label for="payment">Uang bayar (Rp)</label>
+          <input id="payment" type="number" min="0" placeholder="Masukkan uang bayar">
+          <div class="sumline"><span>Kembalian</span><strong id="change">Rp0</strong></div>
+          <div id="paymentMessage" class="message"></div>
+          <button id="checkout" class="full">Selesaikan Transaksi</button>
+          <button id="clearCart" class="secondary full" style="margin-top:8px">Kosongkan Keranjang</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="riwayat" class="section panel">
+    <h2>Riwayat Transaksi</h2><div id="history"></div>
+  </section>
+
+  <section id="produk" class="section panel">
+    <h2>Kelola Produk</h2>
+    <p class="muted">Tambah produk baru atau pilih produk pada daftar untuk mengubah dan menghapusnya.</p>
+    <form id="productForm" class="admin-form">
+      <input id="pName" required placeholder="Nama produk">
+      <input id="pPrice" required type="number" min="1" placeholder="Harga (Rp)">
+      <input id="pCategory" required placeholder="Kategori">
+      <input id="pEmoji" maxlength="4" placeholder="Ikon/emoji (mis. 🍞)">
+      <button id="saveProduct" type="submit">Tambah Produk</button>
+      <button id="cancelEdit" class="secondary" type="button" style="display:none">Batal Ubah</button>
+    </form>
+    <div id="adminList" class="admin-list"></div>
+  </section>
+
+  <section id="laporan" class="section panel">
+    <h2>Laporan Penjualan Hari Ini</h2>
+    <div class="summary">
+      <div class="sumline"><span>Jumlah transaksi</span><strong id="dailyCount">0</strong></div>
+      <div class="sumline"><span>Total pendapatan</span><strong id="dailyRevenue">Rp0</strong></div>
+    </div>
+    <p class="muted">Laporan dihitung dari transaksi yang tersimpan pada tanggal hari ini di perangkat/browser ini.</p>
+  </section>
+  <footer>Data disimpan di browser perangkat ini menggunakan localStorage.</footer>
+</main>
+
+<div id="receiptModal" class="modal" role="dialog" aria-modal="true" aria-label="Struk transaksi">
+  <div class="receipt">
+    <div id="receiptContent"></div>
+    <button id="printReceipt" class="full">Cetak Struk</button>
+    <button id="closeReceipt" class="secondary full" style="margin-top:8px">Tutup</button>
+  </div>
+</div>
+
+<script>
+  // Data produk awal. Produk dan transaksi akan disimpan di localStorage.
+  const initialProducts = [
+    {id:1,name:"Kopi Susu",price:12000,category:"Minuman",emoji:"☕"},
+    {id:2,name:"Es Teh Manis",price:5000,category:"Minuman",emoji:"🧋"},
+    {id:3,name:"Cokelat Hangat",price:10000,category:"Minuman",emoji:"🍫"},
+    {id:4,name:"Air Mineral",price:4000,category:"Minuman",emoji:"💧"},
+    {id:5,name:"Roti Cokelat",price:7000,category:"Makanan",emoji:"🍞"},
+    {id:6,name:"Roti Keju",price:8000,category:"Makanan",emoji:"🥐"},
+    {id:7,name:"Kentang Goreng",price:10000,category:"Makanan",emoji:"🍟"},
+    {id:8,name:"Pisang Goreng",price:8000,category:"Makanan",emoji:"🍌"},
+    {id:9,name:"Nasi Ayam",price:18000,category:"Makanan",emoji:"🍛"},
+    {id:10,name:"Mie Goreng",price:15000,category:"Makanan",emoji:"🍜"},
+    {id:11,name:"Donat",price:6000,category:"Camilan",emoji:"🍩"},
+    {id:12,name:"Keripik",price:5000,category:"Camilan",emoji:"🍿"}
+  ];
+  const rupiah = n => new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(n||0);
+  const today = () => new Date().toLocaleDateString("id-ID");
+  const dateTime = () => new Date().toLocaleString("id-ID");
+  let products = JSON.parse(localStorage.getItem("rasa_products")) || initialProducts;
+  let transactions = JSON.parse(localStorage.getItem("rasa_transactions")) || [];
+  let cart = {};
+  let editingId = null;
+
+  const saveProducts = () => localStorage.setItem("rasa_products",JSON.stringify(products));
+  const saveTransactions = () => localStorage.setItem("rasa_transactions",JSON.stringify(transactions));
+  const byId = id => products.find(p=>p.id===Number(id));
+  const subtotal = () => Object.entries(cart).reduce((sum,[id,qty])=>sum+(byId(id)?.price||0)*qty,0);
+  const calc = () => {
+    const sub=subtotal();
+    const discount=Math.min(Math.max(0,Number(document.getElementById("discount").value)||0),sub);
+    const taxable=sub-discount;
+    const taxRate=Math.min(100,Math.max(0,Number(document.getElementById("tax").value)||0));
+    const taxAmount=Math.round(taxable*taxRate/100);
+    return {sub,discount,taxAmount,total:taxable+taxAmount};
+  };
+
+  function renderCategories(){
+    const select=document.getElementById("category"), current=select.value||"Semua";
+    const cats=[...new Set(products.map(p=>p.category))];
+    select.innerHTML='<option value="Semua">Semua kategori</option>'+cats.map(c=>`<option>${escapeHTML(c)}</option>`).join("");
+    select.value=cats.includes(current)?current:"Semua";
+  }
+  function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+  function renderProducts(){
+    const query=document.getElementById("search").value.toLowerCase().trim();
+    const category=document.getElementById("category").value;
+    const list=products.filter(p=>p.name.toLowerCase().includes(query)&&(category==="Semua"||p.category===category));
+    document.getElementById("products").innerHTML=list.length?list.map(p=>`
+      <article class="product">
+        <div class="emoji">${escapeHTML(p.emoji||"🛍️")}</div>
+        <h3>${escapeHTML(p.name)}</h3><small>${escapeHTML(p.category)}</small>
+        <div class="price">${rupiah(p.price)}</div>
+        <button onclick="addToCart(${p.id})">+ Tambah</button>
+      </article>`).join(""):'<div class="empty">Produk tidak ditemukan.</div>';
+  }
+  function renderCart(){
+    const entries=Object.entries(cart).filter(([id,q])=>q>0&&byId(id));
+    document.getElementById("cart").innerHTML=entries.length?entries.map(([id,q])=>{
+      const p=byId(id);return `<div class="cart-row">
+        <div><strong>${escapeHTML(p.name)}</strong><div class="muted">${rupiah(p.price)} × ${q}</div>
+        <div class="qty"><button class="secondary" onclick="changeQty(${id},-1)">−</button><strong>${q}</strong><button onclick="changeQty(${id},1)">+</button></div></div>
+        <div style="text-align:right"><strong>${rupiah(p.price*q)}</strong><br><button class="danger" style="margin-top:7px;padding:6px 9px" onclick="removeItem(${id})">Hapus</button></div>
+      </div>`;
+    }).join(""):'<div class="empty">Keranjang masih kosong.</div>';
+    updateTotals();
+  }
+  function updateTotals(){
+    const c=calc(),pay=Math.max(0,Number(document.getElementById("payment").value)||0);
+    document.getElementById("subtotal").textContent=rupiah(c.sub);
+    document.getElementById("taxAmount").textContent=rupiah(c.taxAmount);
+    document.getElementById("total").textContent=rupiah(c.total);
+    document.getElementById("change").textContent=rupiah(Math.max(0,pay-c.total));
+    const msg=document.getElementById("paymentMessage");
+    if(c.total>0&&pay<c.total){msg.style.display="block";msg.textContent="Uang bayar masih kurang "+rupiah(c.total-pay)+"."; }
+    else {msg.style.display="none";msg.textContent="";}
+    document.getElementById("checkout").disabled=!Object.keys(cart).length||pay<c.total;
+  }
+  function addToCart(id){cart[id]=(cart[id]||0)+1;renderCart();}
+  function changeQty(id,delta){cart[id]=(cart[id]||0)+delta;if(cart[id]<=0)delete cart[id];renderCart();}
+  function removeItem(id){delete cart[id];renderCart();}
+  function clearCart(){cart={};document.getElementById("payment").value="";document.getElementById("discount").value=0;document.getElementById("tax").value=0;renderCart();}
+  function checkout(){
+    const c=calc(),pay=Number(document.getElementById("payment").value)||0;
+    if(!Object.keys(cart).length||pay<c.total){alert("Keranjang kosong atau uang bayar kurang.");return;}
+    if(!confirm("Selesaikan transaksi sebesar "+rupiah(c.total)+"?"))return;
+    const items=Object.entries(cart).map(([id,q])=>{const p=byId(id);return {name:p.name,price:p.price,qty:q,subtotal:p.price*q};});
+    const tx={id:Date.now(),date:dateTime(),day:today(),items,subtotal:c.sub,discount:c.discount,tax:c.taxAmount,total:c.total,payment:pay,change:pay-c.total};
+    transactions.unshift(tx);saveTransactions();showReceipt(tx);clearCart();renderHistory();renderReport();
+  }
+  function showReceipt(tx){
+    document.getElementById("receiptContent").innerHTML=`
+      <h2>☕ Kedai Rasa Kita</h2><p>Struk Pembelian</p>
+      <p>${escapeHTML(tx.date)}<br>No. transaksi: ${tx.id}</p><hr>
+      <table>${tx.items.map(i=>`<tr><td>${escapeHTML(i.name)} × ${i.qty}</td><td class="right">${rupiah(i.subtotal)}</td></tr>`).join("")}</table><hr>
+      <table>
+        <tr><td>Subtotal</td><td class="right">${rupiah(tx.subtotal)}</td></tr>
+        <tr><td>Diskon</td><td class="right">−${rupiah(tx.discount)}</td></tr>
+        <tr><td>PPN</td><td class="right">${rupiah(tx.tax)}</td></tr>
+        <tr><td><strong>Total</strong></td><td class="right"><strong>${rupiah(tx.total)}</strong></td></tr>
+        <tr><td>Bayar</td><td class="right">${rupiah(tx.payment)}</td></tr>
+        <tr><td>Kembalian</td><td class="right">${rupiah(tx.change)}</td></tr>
+      </table><hr><p>Terima kasih, silakan datang kembali!</p>`;
+    document.getElementById("receiptModal").classList.add("show");
+  }
+  function renderHistory(){
+    const el=document.getElementById("history");
+    el.innerHTML=transactions.length?transactions.map(tx=>`
+      <div class="history-item"><strong>${escapeHTML(tx.date)}</strong><div class="muted">${tx.items.map(i=>escapeHTML(i.name)+" × "+i.qty).join(", ")}</div>
+      <div class="sumline"><strong>${rupiah(tx.total)}</strong><button class="secondary" onclick="reprint(${tx.id})">Lihat Struk</button></div></div>`).join(""):'<div class="empty">Belum ada transaksi.</div>';
+  }
+  function reprint(id){const tx=transactions.find(t=>t.id===id);if(tx)showReceipt(tx);}
+  function renderReport(){
+    const daily=transactions.filter(tx=>tx.day===today());
+    document.getElementById("dailyCount").textContent=daily.length;
+    document.getElementById("dailyRevenue").textContent=rupiah(daily.reduce((s,tx)=>s+tx.total,0));
+  }
+  function renderAdmin(){
+    document.getElementById("adminList").innerHTML=products.map(p=>`
+      <div class="admin-item"><div><strong>${escapeHTML(p.name)}</strong><div class="muted">${escapeHTML(p.category)} • ${rupiah(p.price)}</div></div>
+      <div style="display:flex;gap:6px"><button class="secondary" onclick="editProduct(${p.id})">Ubah</button><button class="danger" onclick="deleteProduct(${p.id})">Hapus</button></div></div>`).join("");
+  }
+  function resetProductForm(){
+    editingId=null;document.getElementById("productForm").reset();document.getElementById("saveProduct").textContent="Tambah Produk";document.getElementById("cancelEdit").style.display="none";
+  }
+  function editProduct(id){
+    const p=byId(id);if(!p)return;
+    editingId=id;document.getElementById("pName").value=p.name;document.getElementById("pPrice").value=p.price;
+    document.getElementById("pCategory").value=p.category;document.getElementById("pEmoji").value=p.emoji||"";
+    document.getElementById("saveProduct").textContent="Simpan Perubahan";document.getElementById("cancelEdit").style.display="block";
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  function deleteProduct(id){
+    const p=byId(id);if(!p)return;
+    if(!confirm('Hapus produk "'+p.name+'"?'))return;
+    products=products.filter(x=>x.id!==id);delete cart[id];saveProducts();renderAll();
+  }
+  document.getElementById("productForm").addEventListener("submit",e=>{
+    e.preventDefault();
+    const name=document.getElementById("pName").value.trim(),price=Number(document.getElementById("pPrice").value);
+    const category=document.getElementById("pCategory").value.trim(),emoji=document.getElementById("pEmoji").value.trim()||"🛍️";
+    if(!name||price<=0||!category){alert("Isi nama, harga, dan kategori dengan benar.");return;}
+    if(editingId!==null){products=products.map(p=>p.id===editingId?{...p,name,price,category,emoji}:p);}
+    else products.push({id:Date.now(),name,price,category,emoji});
+    saveProducts();resetProductForm();renderAll();
+  });
+  function renderAll(){renderCategories();renderProducts();renderCart();renderHistory();renderAdmin();renderReport();}
+  document.getElementById("search").addEventListener("input",renderProducts);
+  document.getElementById("category").addEventListener("change",renderProducts);
+  ["payment","discount","tax"].forEach(id=>document.getElementById(id).addEventListener("input",updateTotals));
+  document.getElementById("checkout").addEventListener("click",checkout);
+  document.getElementById("clearCart").addEventListener("click",()=>{if(confirm("Kosongkan keranjang?"))clearCart();});
+  document.getElementById("cancelEdit").addEventListener("click",resetProductForm);
+  document.getElementById("closeReceipt").addEventListener("click",()=>document.getElementById("receiptModal").classList.remove("show"));
+  document.getElementById("printReceipt").addEventListener("click",()=>window.print());
+  document.querySelectorAll(".tabs button").forEach(btn=>btn.addEventListener("click",()=>{
+    document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b===btn));
+    document.querySelectorAll(".section").forEach(s=>s.classList.toggle("active",s.id===btn.dataset.tab));
+  }));
+  renderAll();
+</script>
+</body>
+</html>
